@@ -1,12 +1,10 @@
-const { Pool, Client } = require("pg");
 require('dotenv').config();
+const { Pool, Client } = require("pg");
+const fs = require('fs');
+const path = require('path');
+const csv = require('fast-csv');
 
 const pool = new Pool();
-
-// pool.query('SELECT NOW()', (err, res) => {
-//     console.log(err, res);
-//     pool.end();
-// });
 
 const client = new Client();
 client.connect();
@@ -15,3 +13,4 @@ client
   .then(res => console.log(res.rows[0]))
   .catch(e => console.error(e.stack))
   .then(() => client.end());
+
