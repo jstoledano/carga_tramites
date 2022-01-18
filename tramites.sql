@@ -1,4 +1,4 @@
-DROP TABLE public.tramites;
+DROP TABLE IF EXISTS public.tramites;
 
 CREATE TABLE public.tramites
 (
@@ -41,7 +41,7 @@ ALTER TABLE public.tramites
     OWNER to javier;
 -- Index: tramites_folio_ac564880_like
 
-DROP INDEX public.tramites_folio_ac564880_like;
+DROP INDEX IF EXISTS public.tramites_folio_ac564880_like;
 
 CREATE INDEX tramites_folio_ac564880_like
     ON public.tramites USING btree
