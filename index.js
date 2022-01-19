@@ -1,22 +1,16 @@
 require('dotenv').config();
-const { Pool } = require('pg');
-const Cursor = require('pg-cursor');
 const fs = require('fs');
-const stripBomStream = require('strip-bom-stream');
-
-
 const path = require('path');
 const csv = require('fast-csv');
-var moment = require('moment');
+const moment = require('moment');
 const {on} = require('events');
-
+const initOptions = {
+  'capSQL': true,
+};
+const pgp = require('pg-promise')(initOptions);
+const conx = `postgres://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}`;
+const db = pgp(conx);
 const file = path.resolve(__dirname, './data/02-Trámites_Tlax_01agosto_31octubre.txt');
-
-const pool = new Pool();
-pool.on('error', (err, client) => {
-    console.error('Unexpected error on idle client', err);
-    process.exit(-1);
-  });
 
 const campos = ['folio', 'estatus', 'causa_rechazo', 'movimiento_solicitado',
     'movimiento_definitivo', 'fecha_tramite', 'fecha_recibido_cecyrd',
@@ -91,9 +85,9 @@ const diferencia = (fecha1, fecha2) => fecha1 ? `'${moment(fecha1, date).diff(mo
 
 fs.createReadStream(file, {encoding: 'utf8'})
     .pipe(csv.parse({headers: campos, delimiter: '|'}))
-
     .on('error', error => console.error(error))
-    .on('data', fila => {
+    .on('start', performance => console.time("dbsave"))
+    .on('data', async fila => {
         fila.tramo_disponible = diferencia(fila.fecha_cpv_disponible, fila.fecha_tramite);
         fila.tramo_entrega = diferencia(fila.fecha_cpv_entregada, fila.fecha_tramite);
         fila.tramo_exitoso = diferencia(fila.fecha_exitoso, fila.fecha_tramite);
@@ -116,12 +110,14 @@ fs.createReadStream(file, {encoding: 'utf8'})
         fila.fecha_afectacion_ln =  f(fila.fecha_afectacion_ln);
         fila.distrito = fila.folio.slice(5,6);
         fila.mac = fila.folio.slice(2,8);
-
-        client.query(linea(fila))
-            .then()
-            .catch(e => console.error(e.stack));
+        try {
+           await db.none(linea(fila));
+        } catch (e) {
+            console.log(e);
+        }
     })
     .on('end', rowCount => {
         console.log(`Parsed ${rowCount} rows`);
-        client.end();
+        console.timeEnd("dbsave");
     });
+    
