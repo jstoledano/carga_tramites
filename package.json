@@ -28,6 +28,8 @@
     "fast-csv": "^4.3.6",
     "moment": "^2.29.1",
     "pg": "^8.7.1",
+    "pg-cursor": "^2.7.1",
+    "pg-native": "^3.0.0",
     "strip-bom-stream": "^3.0.0"
   }
 }
